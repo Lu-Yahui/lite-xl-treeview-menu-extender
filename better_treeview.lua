@@ -27,7 +27,7 @@ local function is_dir(path)
 end
 
 -- moves object (file or directory) to another path
-local function move_object(old_abs_filename, new_abs_filename) 
+local function move_object(old_abs_filename, new_abs_filename)
   local res, err = os.rename(old_abs_filename, new_abs_filename)
   if res then -- successfully renamed
     core.log("Moved \"%s\" to \"%s\"", old_abs_filename, new_abs_filename)
@@ -104,6 +104,30 @@ command.add(
   end
   })
 
+command.add(
+  function()
+    return view.hovered_item ~= nil
+      and view.hovered_item.abs_filename ~= core.project_dir
+  end, {
+  ["treeview:copy-relative-path"] = function()
+    local abs_filename = view.hovered_item.abs_filename
+    local project_dir = core.project_dir
+    local relative_filename = string.sub(abs_filename, #project_dir + 2)
+    system.set_clipboard(relative_filename)
+  end
+  })
+
+command.add(
+  function()
+    return view.hovered_item ~= nil
+      and view.hovered_item.abs_filename ~= core.project_dir
+  end, {
+  ["treeview:copy-absolute-path"] = function()
+    local abs_filename = view.hovered_item.abs_filename
+    system.set_clipboard(abs_filename)
+  end
+  })
+
 menu:register(
   function()
     return view.hovered_item
@@ -136,6 +160,37 @@ menu:register(
   end,
   {
     { text = "Move To..", command = "treeview:move-to" },
+  }
+)
+
+menu:register(
+  function()
+    return view.hovered_item
+      and (is_dir(view.hovered_item.abs_filename) ~= true
+      or view.hovered_item.abs_filename ~= core.project_dir)
+  end,
+  {
+    menu.DIVIDER,
+  }
+)
+
+menu:register(
+  function()
+    return view.hovered_item
+      and view.hovered_item.abs_filename ~= core.project_dir
+  end,
+  {
+    { text = "Copy Path", command = "treeview:copy-absolute-path" },
+  }
+)
+
+menu:register(
+  function()
+    return view.hovered_item
+      and view.hovered_item.abs_filename ~= core.project_dir
+  end,
+  {
+    { text = "Copy Relative Path", command = "treeview:copy-relative-path" },
   }
 )
 
